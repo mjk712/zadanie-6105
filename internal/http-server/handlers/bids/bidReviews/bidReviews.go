@@ -1,12 +1,12 @@
 package bidReviews
 
 import (
-	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
 	"log/slog"
 	"net/http"
+	"strconv"
 )
 
 type Response struct {
@@ -20,7 +20,7 @@ type errResponse struct {
 }
 
 type ShowBidReviews interface {
-	GetBidReviews(tenderId string, authorUsername string, requesterUsername string) ([]*Response, error)
+	GetBidReviews(tenderId string, authorUsername string, requesterUsername string, limit int, offset int) ([]*Response, error)
 }
 
 func New(log *slog.Logger, bidReviews ShowBidReviews) http.HandlerFunc {
@@ -31,13 +31,27 @@ func New(log *slog.Logger, bidReviews ShowBidReviews) http.HandlerFunc {
 			slog.String("op", op),
 			slog.String("request_id", middleware.GetReqID(r.Context())),
 		)
-		//limitStr := r.URL.Query().Get("limit")
-		//offsetStr := r.URL.Query().Get("offset")
+		limitStr := r.URL.Query().Get("limit")
+		offsetStr := r.URL.Query().Get("offset")
 		tenderId := chi.URLParam(r, "tenderId")
 		aName := r.URL.Query().Get("authorUsername")
 		rName := r.URL.Query().Get("requesterUsername")
-		fmt.Println("ssss", tenderId, aName, rName)
-		resp, err := bidReviews.GetBidReviews(tenderId, aName, rName)
+
+		limit := 10
+		offset := 0
+
+		if limitStr != "" {
+			if l, err := strconv.Atoi(limitStr); err == nil {
+				limit = l
+			}
+		}
+		if offsetStr != "" {
+			if o, err := strconv.Atoi(offsetStr); err == nil {
+				offset = o
+			}
+		}
+
+		resp, err := bidReviews.GetBidReviews(tenderId, aName, rName, limit, offset)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			log.Error("failed to get bid reviews", err.Error())

@@ -23,8 +23,7 @@ func New(log *slog.Logger, tendStat TenderStatus) http.HandlerFunc {
 			slog.String("op", op),
 			slog.String("request_id", middleware.GetReqID(r.Context())),
 		)
-		//limitStr := r.URL.Query().Get("limit")
-		//offsetStr := r.URL.Query().Get("offset")
+
 		username := r.URL.Query().Get("username")
 		id := chi.URLParam(r, "tenderId")
 		status, err := tendStat.GetTenderStatus(username, id)

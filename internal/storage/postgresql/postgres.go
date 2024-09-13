@@ -88,12 +88,12 @@ func (s *Storage) NewTender(tender *models.Tender) (*models.Tender, error) {
 	return &t, nil
 }
 
-func (s *Storage) GetMyTender(username string) (*models.Tender, error) {
+func (s *Storage) GetMyTender(username string, limit int, offset int) (*models.Tender, error) {
 	const (
 		op = "storage.postgres.tender.myTender"
 	)
 	var t models.Tender
-	err := s.db.QueryRowx(query.GetMyTender, username).StructScan(&t)
+	err := s.db.QueryRowx(query.GetMyTender, username, limit, offset).StructScan(&t)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
@@ -221,7 +221,7 @@ func (s *Storage) NewBid(bid *models.Bid) (*models.Bid, error) {
 	return &b, nil
 }
 
-func (s *Storage) GetMyBids(username string) ([]*models.Bid, error) {
+func (s *Storage) GetMyBids(username string, limit int, offset int) ([]*models.Bid, error) {
 	const (
 		op = "storage.postgres.bids.myBids"
 	)
@@ -231,7 +231,7 @@ func (s *Storage) GetMyBids(username string) ([]*models.Bid, error) {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 	var bids = make([]*models.Bid, 0)
-	rows, err := s.db.Queryx(query.GetMyBids, uid)
+	rows, err := s.db.Queryx(query.GetMyBids, uid, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
@@ -247,13 +247,13 @@ func (s *Storage) GetMyBids(username string) ([]*models.Bid, error) {
 
 }
 
-func (s *Storage) GetBidTenderList(tenderId string) ([]*models.Bid, error) {
+func (s *Storage) GetBidTenderList(tenderId string, limit int, offset int) ([]*models.Bid, error) {
 	const (
 		op = "storage.postgres.bids.getBidTenderList"
 	)
 
 	var bids = make([]*models.Bid, 0)
-	rows, err := s.db.Queryx(query.GetBidsByTenderId, tenderId)
+	rows, err := s.db.Queryx(query.GetBidsByTenderId, tenderId, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
@@ -413,7 +413,7 @@ func (s *Storage) RollbackBid(username string, version int, id string) (*models.
 	return &b, nil
 }
 
-func (s *Storage) GetBidReviews(tenderId string, authorUsername string, requesterUsername string) ([]*bidReviews.Response, error) {
+func (s *Storage) GetBidReviews(tenderId string, authorUsername string, requesterUsername string, limit int, offset int) ([]*bidReviews.Response, error) {
 	const (
 		op = "storage.postgres.bids.getBidReviews"
 	)
@@ -445,7 +445,7 @@ func (s *Storage) GetBidReviews(tenderId string, authorUsername string, requeste
 	}
 
 	var feedbacks = make([]*bidReviews.Response, 0)
-	rows, err := s.db.Queryx(query.GetBidsReviews, tenderId, authorId)
+	rows, err := s.db.Queryx(query.GetBidsReviews, tenderId, authorId, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("get reviews %s: %w", op, err)
 	}

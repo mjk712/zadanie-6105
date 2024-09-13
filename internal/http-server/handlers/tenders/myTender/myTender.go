@@ -6,6 +6,7 @@ import (
 	"github.com/go-chi/render"
 	"log/slog"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -23,7 +24,7 @@ type errResponse struct {
 }
 
 type ShowMyTender interface {
-	GetMyTender(username string) (*models.Tender, error)
+	GetMyTender(username string, limit int, offset int) (*models.Tender, error)
 }
 
 func New(log *slog.Logger, myTender ShowMyTender) http.HandlerFunc {
@@ -34,19 +35,34 @@ func New(log *slog.Logger, myTender ShowMyTender) http.HandlerFunc {
 			slog.String("op", op),
 			slog.String("request_id", middleware.GetReqID(r.Context())),
 		)
-		//limitStr := r.URL.Query().Get("limit")
-		//offsetStr := r.URL.Query().Get("offset")
+		limitStr := r.URL.Query().Get("limit")
+		offsetStr := r.URL.Query().Get("offset")
 		username := r.URL.Query().Get("username")
-		resp, err := myTender.GetMyTender(username)
+
+		limit := 10
+		offset := 0
+
+		if limitStr != "" {
+			if l, err := strconv.Atoi(limitStr); err == nil {
+				limit = l
+			}
+		}
+		if offsetStr != "" {
+			if o, err := strconv.Atoi(offsetStr); err == nil {
+				offset = o
+			}
+		}
+
+		resp, err := myTender.GetMyTender(username, limit, offset)
 		if err != nil {
-			log.Error("failed to getTenders myTender tender", err.Error())
+			log.Error("failed to get my tender", err.Error())
 			w.WriteHeader(http.StatusBadRequest)
 			render.JSON(w, r, errResponse{reason: err.Error()})
 			return
 		}
 
 		w.WriteHeader(http.StatusOK)
-		log.Info("getTenders myTender tender success")
+		log.Info("get my tenders success")
 		response := Response{
 			Id:          resp.Id.String(),
 			Name:        resp.Name,

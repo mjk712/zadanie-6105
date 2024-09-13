@@ -6,6 +6,7 @@ import (
 	"github.com/go-chi/render"
 	"log/slog"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -20,7 +21,7 @@ type Response struct {
 }
 
 type ShowMyBids interface {
-	GetMyBids(username string) ([]*models.Bid, error)
+	GetMyBids(username string, limit int, offset int) ([]*models.Bid, error)
 }
 
 type errResponse struct {
@@ -35,10 +36,25 @@ func New(log *slog.Logger, myBids ShowMyBids) http.HandlerFunc {
 			slog.String("op", op),
 			slog.String("request_id", middleware.GetReqID(r.Context())),
 		)
-		//limitStr := r.URL.Query().Get("limit")
-		//offsetStr := r.URL.Query().Get("offset")
+		limitStr := r.URL.Query().Get("limit")
+		offsetStr := r.URL.Query().Get("offset")
 		username := r.URL.Query().Get("username")
-		resp, err := myBids.GetMyBids(username)
+
+		limit := 10
+		offset := 0
+
+		if limitStr != "" {
+			if l, err := strconv.Atoi(limitStr); err == nil {
+				limit = l
+			}
+		}
+		if offsetStr != "" {
+			if o, err := strconv.Atoi(offsetStr); err == nil {
+				offset = o
+			}
+		}
+
+		resp, err := myBids.GetMyBids(username, limit, offset)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			log.Error("failed to get bids by username", err.Error())

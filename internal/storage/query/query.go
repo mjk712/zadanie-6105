@@ -2,7 +2,7 @@ package query
 
 var InsertTender = `INSERT INTO tender(name,description,service_type,status,organization_id,creator_username) VALUES($1,$2,$3,$4,$5,$6) RETURNING id,name,description,service_type,status,version,created_at;`
 
-var GetMyTender = `SELECT * FROM tender WHERE creator_username = $1;`
+var GetMyTender = `SELECT * FROM tender WHERE creator_username = $1 LIMIT $2 OFFSET $3;`
 
 var GetTenderStatus = `SELECT status FROM tender WHERE creator_username = $1 AND id = $2;`
 
@@ -27,7 +27,7 @@ RETURNING t.*;`
 
 var InsertBid = `INSERT INTO bid(name,description,status,tender_id,author_type,author_id) VALUES($1,$2,$3,$4,$5,$6) RETURNING id,name,description,status,author_type,author_id,version,created_at;`
 
-var GetMyBids = `SELECT id,name,description,status,author_type,author_id,version,created_at FROM bid WHERE author_id =$1;`
+var GetMyBids = `SELECT id,name,description,status,author_type,author_id,version,created_at FROM bid WHERE author_id =$1 LIMIT $2 OFFSET $3;`
 
 var GetBidByFeedbackId = `
 SELECT b.id,b.name,b.description,b.status,b.author_type,b.author_id,b.version,b.created_at
@@ -37,7 +37,7 @@ WHERE f.id = $1;`
 
 var GetIdByUsername = `SELECT id FROM employee WHERE username = $1;`
 
-var GetBidsByTenderId = `SELECT id,name,description,status,author_type,author_id,version,created_at FROM bid WHERE tender_id =$1;`
+var GetBidsByTenderId = `SELECT id,name,description,status,author_type,author_id,version,created_at FROM bid WHERE tender_id =$1 LIMIT $2 OFFSET $3;`
 
 var GetBidStatus = `SELECT status FROM bid WHERE author_id = $1 AND id = $2;`
 
@@ -73,7 +73,8 @@ var GetBidsReviews = `
 SELECT b.tender_id, f.feedback_text, f.created_at
 FROM bid b
 LEFT JOIN feedback f ON b.id = f.bid_id
-WHERE b.tender_id = $1 AND b.author_id = $2;`
+WHERE b.tender_id = $1 AND b.author_id = $2
+LIMIT $3 OFFSET $4;`
 
 var GetOrganizationByTenderId = `SELECT organization_id FROM tender WHERE id = $1;`
 

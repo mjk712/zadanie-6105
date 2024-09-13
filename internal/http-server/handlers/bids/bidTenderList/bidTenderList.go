@@ -7,6 +7,7 @@ import (
 	"github.com/go-chi/render"
 	"log/slog"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -21,7 +22,7 @@ type Response struct {
 }
 
 type ShowBidTenderList interface {
-	GetBidTenderList(tenderId string) ([]*models.Bid, error)
+	GetBidTenderList(tenderId string, limit int, offset int) ([]*models.Bid, error)
 }
 
 type errResponse struct {
@@ -36,10 +37,25 @@ func New(log *slog.Logger, bidTenderList ShowBidTenderList) http.HandlerFunc {
 			slog.String("op", op),
 			slog.String("request_id", middleware.GetReqID(r.Context())),
 		)
-		//limitStr := r.URL.Query().Get("limit")
-		//offsetStr := r.URL.Query().Get("offset")
+		limitStr := r.URL.Query().Get("limit")
+		offsetStr := r.URL.Query().Get("offset")
 		tenderId := chi.URLParam(r, "tenderId")
-		resp, err := bidTenderList.GetBidTenderList(tenderId)
+
+		limit := 10
+		offset := 0
+
+		if limitStr != "" {
+			if l, err := strconv.Atoi(limitStr); err == nil {
+				limit = l
+			}
+		}
+		if offsetStr != "" {
+			if o, err := strconv.Atoi(offsetStr); err == nil {
+				offset = o
+			}
+		}
+
+		resp, err := bidTenderList.GetBidTenderList(tenderId, limit, offset)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			log.Error("failed to get bids by tenderId", err.Error())
