@@ -181,7 +181,7 @@ Response:
 - **Ожидаемый результат:** Статус код 200 и корректный список тендеров.
 
 ```yaml
-GET /api/tenders
+GET /api/getTenders
 
 Response:
 
@@ -196,7 +196,7 @@ Response:
 - **Ожидаемый результат:** Статус код 200 и данные созданного тендера.
 
 ```yaml
-POST /api/tenders/new
+POST /api/getTenders/addTender
 
 Request Body:
 
@@ -236,7 +236,7 @@ Response:
 - **Ожидаемый результат:** Статус код 200 и список тендеров пользователя.
 
 ```yaml
-GET /api/tenders/my?username=user1
+GET /api/getTenders/myTender?username=user1
 
 Response:
 
@@ -251,7 +251,7 @@ Response:
 - **Ожидаемый результат:** Статус код 200 и обновленные данные тендера.
 
 ```yaml
-PATCH /api/tenders/1/edit
+PATCH /api/getTenders/1/edit
 
 Request Body:
 
@@ -282,7 +282,7 @@ Response:
 - **Ожидаемый результат:** Статус код 200 и данные тендера на указанной версии.
 
 ```yaml
-PUT /api/tenders/1/rollback/2
+PUT /api/getTenders/1/rollback/2
 
 Response:
 
@@ -303,7 +303,7 @@ Response:
 - **Ожидаемый результат:** Статус код 200 и данные созданного предложения.
 
 ```yaml
-POST /api/bids/new
+POST /api/bids/addTender
 
 Request Body:
 
@@ -342,7 +342,7 @@ Response:
 - **Ожидаемый результат:** Статус код 200 и список предложений пользователя.
 
 ```yaml
-GET /api/bids/my?username=user1
+GET /api/bids/myTender?username=user1
 
 Response:
 

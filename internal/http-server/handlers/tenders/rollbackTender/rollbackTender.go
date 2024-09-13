@@ -1,13 +1,13 @@
-package tenderRollback
+package rollbackTender
 
 import (
 	"api/internal/models"
-	"encoding/json"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
 	"log/slog"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -15,10 +15,14 @@ type Response struct {
 	Id          string `json:"id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
-	Status      string `json:"status"`
+	Status      string `json:"tenderStatus"`
 	ServiceType string `json:"serviceType"`
 	Version     uint64 `json:"version"`
 	CreatedAt   string `json:"createdAt"`
+}
+
+type errResponse struct {
+	reason string `json:"reason"`
 }
 
 type RollbackTender interface {
@@ -28,38 +32,38 @@ type RollbackTender interface {
 func New(log *slog.Logger, rollback RollbackTender) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const op = "handlers.tender.rollback.New"
+		w.Header().Set("Content-Type", "application/json")
 		log = log.With(
 			slog.String("op", op),
 			slog.String("request_id", middleware.GetReqID(r.Context())),
 		)
 		username := r.URL.Query().Get("username")
 		id := chi.URLParam(r, "tenderId")
-
-		var updData Request
-		err := json.NewDecoder(r.Body).Decode(&updData)
+		v := chi.URLParam(r, "version")
+		version, err := strconv.Atoi(v)
 		if err != nil {
-			log.Error("failed to decode request body", err.Error())
+			log.Error("failed to convert version", err.Error())
 			return
 		}
 
-		updatedTender, err := updTender.UpdateTender(username, id, &updData)
+		rollbackedTender, err := rollback.RollbackTender(username, version, id)
 		if err != nil {
-			log.Error("failed to update tender", err.Error())
-			render.JSON(w, r, errors.New("failed to update tender"))
+			w.WriteHeader(http.StatusBadRequest)
+			log.Error("failed to rollback tender", err.Error())
+			render.JSON(w, r, errResponse{reason: err.Error()})
 			return
 		}
 
-		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		log.Info("update tender success")
+		log.Info("rollback tender success")
 		response := Response{
-			Id:          updatedTender.Id.String(),
-			Name:        updatedTender.Name,
-			Description: updatedTender.Description,
-			Status:      updatedTender.Status,
-			ServiceType: updatedTender.ServiceType,
-			Version:     updatedTender.Version,
-			CreatedAt:   updatedTender.CreatedAt.Format(time.RFC3339),
+			Id:          rollbackedTender.Id.String(),
+			Name:        rollbackedTender.Name,
+			Description: rollbackedTender.Description,
+			Status:      rollbackedTender.Status,
+			ServiceType: rollbackedTender.ServiceType,
+			Version:     rollbackedTender.Version,
+			CreatedAt:   rollbackedTender.CreatedAt.Format(time.RFC3339),
 		}
 
 		render.JSON(w, r, response)

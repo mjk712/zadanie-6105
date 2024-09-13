@@ -1,9 +1,8 @@
-package add
+package addTender
 
 import (
 	"api/internal/models"
 	"encoding/json"
-	"errors"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
 	"log/slog"
@@ -15,10 +14,14 @@ type Response struct {
 	Id          string `json:"id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
-	Status      string `json:"status"`
+	Status      string `json:"tenderStatus"`
 	ServiceType string `json:"serviceType"`
 	Version     uint64 `json:"version"`
 	CreatedAt   string `json:"createdAt"`
+}
+
+type errResponse struct {
+	reason string `json:"reason"`
 }
 
 type TenderNew interface {
@@ -27,7 +30,8 @@ type TenderNew interface {
 
 func New(log *slog.Logger, newTender TenderNew) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		const op = "handlers.tender.add.New"
+		const op = "handlers.tender.addTender.New"
+		w.Header().Set("Content-Type", "application/json")
 		log = log.With(
 			slog.String("op", op),
 			slog.String("request_id", middleware.GetReqID(r.Context())),
@@ -35,20 +39,21 @@ func New(log *slog.Logger, newTender TenderNew) http.HandlerFunc {
 		var tender models.Tender
 		err := json.NewDecoder(r.Body).Decode(&tender)
 		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
 			log.Error("failed to decode request body", err.Error())
+			render.JSON(w, r, errResponse{reason: err.Error()})
 			return
 		}
-		//todo проверка на существование пользователя
+
 		resp, err := newTender.NewTender(&tender)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
-			log.Error("failed to create add tender", err.Error())
-			render.JSON(w, r, errors.New("failed to create new tender"))
+			log.Error("failed to create addTender tender", err.Error())
+			render.JSON(w, r, errResponse{reason: err.Error()})
 			return
 		}
-		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		log.Info("create add tender success")
+		log.Info("create new tender success")
 		response := Response{
 			Id:          resp.Id.String(),
 			Name:        resp.Name,

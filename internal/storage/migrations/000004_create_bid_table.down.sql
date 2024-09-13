@@ -1,0 +1,3 @@
+DROP TABLE IF EXISTS bid;
+
+DROP TABLE IF EXISTS tender_bid;

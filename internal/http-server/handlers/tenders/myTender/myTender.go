@@ -1,8 +1,7 @@
-package my
+package myTender
 
 import (
 	"api/internal/models"
-	"errors"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
 	"log/slog"
@@ -14,10 +13,13 @@ type Response struct {
 	Id          string `json:"id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
-	Status      string `json:"status"`
+	Status      string `json:"tenderStatus"`
 	ServiceType string `json:"serviceType"`
 	Version     uint64 `json:"version"`
 	CreatedAt   string `json:"createdAt"`
+}
+type errResponse struct {
+	reason string `json:"reason"`
 }
 
 type ShowMyTender interface {
@@ -26,7 +28,8 @@ type ShowMyTender interface {
 
 func New(log *slog.Logger, myTender ShowMyTender) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		const op = "handlers.tender.my.New"
+		const op = "handlers.tender.myTender.New"
+		w.Header().Set("Content-Type", "application/json")
 		log = log.With(
 			slog.String("op", op),
 			slog.String("request_id", middleware.GetReqID(r.Context())),
@@ -34,24 +37,24 @@ func New(log *slog.Logger, myTender ShowMyTender) http.HandlerFunc {
 		//limitStr := r.URL.Query().Get("limit")
 		//offsetStr := r.URL.Query().Get("offset")
 		username := r.URL.Query().Get("username")
-		mytender, err := myTender.GetMyTender(username)
+		resp, err := myTender.GetMyTender(username)
 		if err != nil {
-			log.Error("failed to get my tender", err.Error())
-			render.JSON(w, r, errors.New("failed to get my tender"))
+			log.Error("failed to getTenders myTender tender", err.Error())
+			w.WriteHeader(http.StatusBadRequest)
+			render.JSON(w, r, errResponse{reason: err.Error()})
 			return
 		}
 
-		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		log.Info("get my tender success")
+		log.Info("getTenders myTender tender success")
 		response := Response{
-			Id:          mytender.Id.String(),
-			Name:        mytender.Name,
-			Description: mytender.Description,
-			Status:      mytender.Status,
-			ServiceType: mytender.ServiceType,
-			Version:     mytender.Version,
-			CreatedAt:   mytender.CreatedAt.Format(time.RFC3339),
+			Id:          resp.Id.String(),
+			Name:        resp.Name,
+			Description: resp.Description,
+			Status:      resp.Status,
+			ServiceType: resp.ServiceType,
+			Version:     resp.Version,
+			CreatedAt:   resp.CreatedAt.Format(time.RFC3339),
 		}
 
 		render.JSON(w, r, response)
