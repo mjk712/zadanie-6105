@@ -20,8 +20,8 @@ import (
 	"api/internal/http-server/handlers/tenders/redactTender"
 	"api/internal/http-server/handlers/tenders/rollbackTender"
 	"api/internal/http-server/handlers/tenders/tenderStatus"
+	apiMiddleware "api/internal/http-server/middleware"
 	"api/internal/storage/postgresql"
-	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"log/slog"
@@ -39,7 +39,6 @@ const (
 func main() {
 	//config
 	cfg := config.New()
-	fmt.Println(cfg)
 	//log
 	log := setupLogger(cfg.Env)
 	log.Info(
@@ -67,10 +66,10 @@ func main() {
 		r.Get("/tenders", getTenders.New(log, storage))
 		r.Post("/tenders/new", addTender.New(log, storage))
 		r.Get("/tenders/my", myTender.New(log, storage))
-		r.Get("/tenders/{tenderId:[a-fA-f0-9\\-]{36}}/status", tenderStatus.New(log, storage))
-		r.Put("/tenders/{tenderId:[a-fA-f0-9\\-]{36}}/status", changeTenderStatus.New(log, storage))
-		r.Patch("/tenders/{tenderId:[a-fA-f0-9\\-]{36}}/edit", redactTender.New(log, storage))
-		r.Put("/tenders/{tenderId:[a-fA-f0-9\\-]{36}}/rollback/{version}", rollbackTender.New(log, storage))
+		r.With(apiMiddleware.CheckUserTenderMiddleware(log, storage)).Get("/tenders/{tenderId:[a-fA-f0-9\\-]{36}}/status", tenderStatus.New(log, storage))
+		r.With(apiMiddleware.CheckUserTenderMiddleware(log, storage)).Put("/tenders/{tenderId:[a-fA-f0-9\\-]{36}}/status", changeTenderStatus.New(log, storage))
+		r.With(apiMiddleware.CheckUserTenderMiddleware(log, storage)).Patch("/tenders/{tenderId:[a-fA-f0-9\\-]{36}}/edit", redactTender.New(log, storage))
+		r.With(apiMiddleware.CheckUserTenderMiddleware(log, storage)).Put("/tenders/{tenderId:[a-fA-f0-9\\-]{36}}/rollback/{version}", rollbackTender.New(log, storage))
 
 		r.Post("/bids/new", addBid.New(log, storage))
 		r.Get("/bids/myBids", myBids.New(log, storage))

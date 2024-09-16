@@ -20,7 +20,7 @@ type Response struct {
 	CreatedAt  string `json:"createdAt"`
 }
 type errResponse struct {
-	reason string `json:"reason"`
+	Reason string `json:"reason"`
 }
 
 type BidNew interface {
@@ -46,7 +46,7 @@ func New(log *slog.Logger, newBid BidNew) http.HandlerFunc {
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			log.Error("failed to add bid", err.Error())
-			render.JSON(w, r, errResponse{reason: err.Error()})
+			render.JSON(w, r, errResponse{Reason: err.Error()})
 			return
 		}
 

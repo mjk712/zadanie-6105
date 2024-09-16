@@ -59,7 +59,6 @@ SET name = bh.name,
     author_type = bh.author_type,
     author_id = bh.author_id,
     decision = bh.decision,
-    feedback = bh.feedback,
     version = b.version + 1, -- Увеличиваем версию
     updated_at = CURRENT_TIMESTAMP
 FROM bid_history bh

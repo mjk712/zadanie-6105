@@ -27,7 +27,7 @@ type Response struct {
 }
 
 type errResponse struct {
-	reason string `json:"reason"`
+	Reason string `json:"reason"`
 }
 
 type RedactBid interface {
@@ -50,7 +50,7 @@ func New(log *slog.Logger, updBid RedactBid) http.HandlerFunc {
 		if err != nil {
 			log.Error("failed to decode request body", err.Error())
 			w.WriteHeader(http.StatusBadRequest)
-			render.JSON(w, r, errResponse{reason: err.Error()})
+			render.JSON(w, r, errResponse{Reason: err.Error()})
 			return
 		}
 
@@ -58,7 +58,7 @@ func New(log *slog.Logger, updBid RedactBid) http.HandlerFunc {
 		if err != nil {
 			log.Error("failed to update Bid", err.Error())
 			w.WriteHeader(http.StatusBadRequest)
-			render.JSON(w, r, errResponse{reason: err.Error()})
+			render.JSON(w, r, errResponse{Reason: err.Error()})
 			return
 		}
 

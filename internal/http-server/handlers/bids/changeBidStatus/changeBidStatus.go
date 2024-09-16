@@ -21,7 +21,7 @@ type Response struct {
 }
 
 type errResponse struct {
-	reason string `json:"reason"`
+	Reason string `json:"reason"`
 }
 
 type ChangeBidStatus interface {
@@ -43,7 +43,7 @@ func New(log *slog.Logger, changeStatus ChangeBidStatus) http.HandlerFunc {
 		if err != nil {
 			log.Error("failed to change bid status", err.Error())
 			w.WriteHeader(http.StatusBadRequest)
-			render.JSON(w, r, errResponse{reason: err.Error()})
+			render.JSON(w, r, errResponse{Reason: err.Error()})
 			return
 		}
 

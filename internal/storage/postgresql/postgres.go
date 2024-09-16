@@ -30,7 +30,11 @@ func New(connectionString string) (*Storage, error) {
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
-	m.Up()
+
+	err = m.Up()
+	if err != nil {
+		fmt.Println(fmt.Errorf("%s: %w", op, err))
+	}
 
 	return &Storage{db}, nil
 }
@@ -79,8 +83,23 @@ func (s *Storage) NewTender(tender *models.Tender) (*models.Tender, error) {
 		op     = "storage.postgres.tender.addTender"
 		status = "Created"
 	)
+
+	var userId uuid.UUID
+	err := s.db.QueryRowx(query.GetIdByUsername, tender.CreatorUsername).Scan(&userId)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	var isResponsible bool
+	err = s.db.QueryRowx(query.CheckIfUserIsResponsible, tender.OrganizationId, userId).Scan(&isResponsible)
+	if err != nil {
+		return nil, fmt.Errorf("check responsible %s: %w", op, err)
+	}
+	if !isResponsible {
+		return nil, fmt.Errorf("%s: user is not responsible")
+	}
 	var t models.Tender
-	err := s.db.QueryRowx(query.InsertTender, tender.Name, tender.Description, tender.ServiceType, status, tender.OrganizationId, tender.CreatorUsername).StructScan(&t)
+	err = s.db.QueryRowx(query.InsertTender, tender.Name, tender.Description, tender.ServiceType, status, tender.OrganizationId, tender.CreatorUsername).StructScan(&t)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
@@ -211,9 +230,25 @@ func (s *Storage) NewBid(bid *models.Bid) (*models.Bid, error) {
 		op     = "storage.postgres.bids.addBid"
 		status = "Created"
 	)
-	var b models.Bid
 
-	err := s.db.QueryRowx(query.InsertBid, bid.Name, bid.Description, status, bid.TenderId, bid.AuthorType, bid.AuthorId).StructScan(&b)
+	var organizationId uuid.UUID
+	err := s.db.QueryRowx(query.GetOrganizationByTenderId, bid.TenderId).Scan(&organizationId)
+	if err != nil {
+		return nil, fmt.Errorf("get tender organization %s: %w", op, err)
+	}
+	var isResponsible bool
+
+	err = s.db.QueryRowx(query.CheckIfUserIsResponsible, organizationId, bid.AuthorId).Scan(&isResponsible)
+	if err != nil {
+		return nil, fmt.Errorf("check responsible %s: %w", op, err)
+	}
+
+	if !isResponsible {
+		return nil, fmt.Errorf("%s: user is not responsible")
+	}
+
+	var b models.Bid
+	err = s.db.QueryRowx(query.InsertBid, bid.Name, bid.Description, status, bid.TenderId, bid.AuthorType, bid.AuthorId).StructScan(&b)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
@@ -435,12 +470,13 @@ func (s *Storage) GetBidReviews(tenderId string, authorUsername string, requeste
 	if err != nil {
 		return nil, fmt.Errorf("get tender organization %s: %w", op, err)
 	}
+
 	var isResponsible bool
 	err = s.db.QueryRowx(query.CheckIfUserIsResponsible, organizationId, requesterId).Scan(&isResponsible)
 	if err != nil {
 		return nil, fmt.Errorf("check responsible %s: %w", op, err)
 	}
-	if isResponsible {
+	if !isResponsible {
 		return nil, fmt.Errorf("%s: user is not responsible")
 	}
 
@@ -454,8 +490,35 @@ func (s *Storage) GetBidReviews(tenderId string, authorUsername string, requeste
 		if err := rows.StructScan(&f); err != nil {
 			return nil, fmt.Errorf("%s: %w", op, err)
 		}
+
 		feedbacks = append(feedbacks, &f)
 	}
 	rows.Close()
 	return feedbacks, nil
+}
+
+func (s *Storage) IsUserAttachedToOrganization(username string, tenderId string) (bool, error) {
+	const (
+		op = "storage.postgres.IsUserAttachedToOrganization"
+	)
+	var userId uuid.UUID
+	err := s.db.QueryRowx(query.GetIdByUsername, username).Scan(&userId)
+	if err != nil {
+		return false, fmt.Errorf("%s: %w", op, err)
+	}
+	fmt.Println(userId)
+	var orgId uuid.UUID
+	err = s.db.QueryRowx(query.GetOrganizationByTenderId, tenderId).Scan(&orgId)
+	if err != nil {
+		return false, fmt.Errorf("%s: %w", op, err)
+	}
+
+	var isResponsible bool
+
+	err = s.db.QueryRowx(query.CheckIfUserIsResponsible, orgId, userId).Scan(&isResponsible)
+	if err != nil {
+		return false, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return isResponsible, nil
 }

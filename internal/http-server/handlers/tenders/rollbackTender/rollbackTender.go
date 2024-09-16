@@ -22,7 +22,7 @@ type Response struct {
 }
 
 type errResponse struct {
-	reason string `json:"reason"`
+	Reason string `json:"reason"`
 }
 
 type RollbackTender interface {
@@ -50,7 +50,7 @@ func New(log *slog.Logger, rollback RollbackTender) http.HandlerFunc {
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			log.Error("failed to rollback tender", err.Error())
-			render.JSON(w, r, errResponse{reason: err.Error()})
+			render.JSON(w, r, errResponse{Reason: err.Error()})
 			return
 		}
 

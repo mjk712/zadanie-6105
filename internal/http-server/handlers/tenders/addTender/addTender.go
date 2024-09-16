@@ -21,7 +21,7 @@ type Response struct {
 }
 
 type errResponse struct {
-	reason string `json:"reason"`
+	Reason string `json:"reason"`
 }
 
 type TenderNew interface {
@@ -41,15 +41,15 @@ func New(log *slog.Logger, newTender TenderNew) http.HandlerFunc {
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			log.Error("failed to decode request body", err.Error())
-			render.JSON(w, r, errResponse{reason: err.Error()})
+			render.JSON(w, r, errResponse{Reason: err.Error()})
 			return
 		}
 
 		resp, err := newTender.NewTender(&tender)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
-			log.Error("failed to create addTender tender", err.Error())
-			render.JSON(w, r, errResponse{reason: err.Error()})
+			log.Error("failed to create new tender", err.Error())
+			render.JSON(w, r, errResponse{Reason: err.Error()})
 			return
 		}
 		w.WriteHeader(http.StatusOK)

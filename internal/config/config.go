@@ -35,15 +35,3 @@ func New() *Config {
 	}
 	return &cfg
 }
-
-/*
-export SERVER_ADDRESS=0.0.0.0:8080
-export POSTGRES_CONN=postgres://postgres:1234@localhost:5432/tender?sslmode=disable
-export POSTGRES_JDBC_URL=jdbc:postgresql://localhost:5432/tender
-export POSTGRES_USERNAME=postgres
-export POSTGRES_PASSWORD=1234
-export POSTGRES_HOST=localhost
-export POSTGRES_PORT=5432
-export POSTGRES_DATABASE=PostgreSQL
-export ENV=prod
-*/

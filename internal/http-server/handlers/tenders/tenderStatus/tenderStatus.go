@@ -12,7 +12,7 @@ type TenderStatus interface {
 	GetTenderStatus(username string, id string) (string, error)
 }
 type errResponse struct {
-	reason string `json:"reason"`
+	Reason string `json:"reason"`
 }
 
 func New(log *slog.Logger, tendStat TenderStatus) http.HandlerFunc {
@@ -30,7 +30,7 @@ func New(log *slog.Logger, tendStat TenderStatus) http.HandlerFunc {
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			log.Error("failed to getTenders myTender tender", err.Error())
-			render.JSON(w, r, errResponse{reason: err.Error()})
+			render.JSON(w, r, errResponse{Reason: err.Error()})
 			return
 		}
 

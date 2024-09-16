@@ -20,7 +20,7 @@ type Response struct {
 	CreatedAt   string `json:"createdAt"`
 }
 type errResponse struct {
-	reason string `json:"reason"`
+	Reason string `json:"reason"`
 }
 
 type ShowMyTender interface {
@@ -56,8 +56,8 @@ func New(log *slog.Logger, myTender ShowMyTender) http.HandlerFunc {
 		resp, err := myTender.GetMyTender(username, limit, offset)
 		if err != nil {
 			log.Error("failed to get my tender", err.Error())
-			w.WriteHeader(http.StatusBadRequest)
-			render.JSON(w, r, errResponse{reason: err.Error()})
+			w.WriteHeader(http.StatusUnauthorized)
+			render.JSON(w, r, errResponse{Reason: err.Error()})
 			return
 		}
 

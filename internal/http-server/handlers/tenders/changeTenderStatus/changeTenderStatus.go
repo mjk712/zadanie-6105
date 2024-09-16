@@ -21,7 +21,7 @@ type Response struct {
 }
 
 type errResponse struct {
-	reason string `json:"reason"`
+	Reason string `json:"reason"`
 }
 
 type ChangeTenderStatus interface {
@@ -37,13 +37,13 @@ func New(log *slog.Logger, changeStat ChangeTenderStatus) http.HandlerFunc {
 			slog.String("request_id", middleware.GetReqID(r.Context())),
 		)
 		username := r.URL.Query().Get("username")
-		status := r.URL.Query().Get("tenderStatus")
+		status := r.URL.Query().Get("status")
 		id := chi.URLParam(r, "tenderId")
 		tend, err := changeStat.PutTenderStatus(username, id, status)
 		if err != nil {
 			log.Error("failed to change tender tenderStatus", err.Error())
 			w.WriteHeader(http.StatusBadRequest)
-			render.JSON(w, r, errResponse{reason: err.Error()})
+			render.JSON(w, r, errResponse{Reason: err.Error()})
 			return
 		}
 

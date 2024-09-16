@@ -20,7 +20,7 @@ type Response struct {
 	CreatedAt  string `json:"createdAt"`
 }
 type errResponse struct {
-	reason string `json:"reason"`
+	Reason string `json:"reason"`
 }
 
 type SubmitBidDecision interface {
@@ -42,10 +42,10 @@ func New(log *slog.Logger, putDecision SubmitBidDecision) http.HandlerFunc {
 		if err != nil {
 			log.Error("failed to submit bid decision", err.Error())
 			w.WriteHeader(http.StatusBadRequest)
-			render.JSON(w, r, errResponse{reason: err.Error()})
+			render.JSON(w, r, errResponse{Reason: err.Error()})
 			return
 		}
-		
+
 		w.WriteHeader(http.StatusOK)
 		log.Info("submit bid decision success")
 		response := Response{

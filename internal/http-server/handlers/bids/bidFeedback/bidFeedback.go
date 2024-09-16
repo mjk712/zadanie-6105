@@ -25,7 +25,7 @@ type WriteBidFeedback interface {
 }
 
 type errResponse struct {
-	reason string `json:"reason"`
+	Reason string `json:"reason"`
 }
 
 func New(log *slog.Logger, putFeedback WriteBidFeedback) http.HandlerFunc {
@@ -43,7 +43,7 @@ func New(log *slog.Logger, putFeedback WriteBidFeedback) http.HandlerFunc {
 		if err != nil {
 			log.Error("failed to put bid feedback", err.Error())
 			w.WriteHeader(http.StatusBadRequest)
-			render.JSON(w, r, errResponse{reason: err.Error()})
+			render.JSON(w, r, errResponse{Reason: err.Error()})
 			return
 		}
 
